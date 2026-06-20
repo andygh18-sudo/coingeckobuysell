@@ -16,7 +16,10 @@ st.set_page_config(
 # DATA FETCH
 # =========================
 
-@st.cache_data(ttl=900)
+import time
+import random
+
+@st.cache_data(ttl=1800)
 def fetch_top_200_coingecko():
     url = "https://api.coingecko.com/api/v3/coins/markets"
 
@@ -29,43 +32,28 @@ def fetch_top_200_coingecko():
         "price_change_percentage": "24h,7d,30d"
     }
 
-    r = requests.get(url, params=params)
+    headers = {
+        "User-Agent": "Mozilla/5.0"
+    }
 
-    # 🚨 STEP 1: check HTTP success
-    if r.status_code != 200:
-        st.error(f"API Error: {r.status_code}")
-        return pd.DataFrame()
+    for attempt in range(5):  # retry 5 times
+        r = requests.get(url, params=params, headers=headers)
 
-    data = r.json()
+        if r.status_code == 200:
+            data = r.json()
 
-    # 🚨 STEP 2: check CoinGecko error response
-    if isinstance(data, dict) and "status" in data:
-        st.error(f"CoinGecko Error: {data['status'].get('error_message')}")
-        return pd.DataFrame()
+            if isinstance(data, list):
+                return data
 
-    # 🚨 STEP 3: ensure list
-    if not isinstance(data, list):
-        st.error("Unexpected API response format")
-        return pd.DataFrame()
+        if r.status_code == 429:
+            wait = (2 ** attempt) + random.random()
+            time.sleep(wait)
+            continue
 
-    coins = []
+        break
 
-    for c in data:
-        coins.append({
-            "name": c.get("name"),
-            "symbol": c.get("symbol", "").upper(),
-            "price": c.get("current_price"),
-            "market_cap": c.get("market_cap"),
-            "volume": c.get("total_volume"),
-            "change_24h": c.get("price_change_percentage_24h"),
-            "change_7d": c.get("price_change_percentage_7d_in_currency"),
-            "change_30d": c.get("price_change_percentage_30d_in_currency"),
-            "high_24h": c.get("high_24h"),
-            "low_24h": c.get("low_24h")
-        })
-
-    return pd.DataFrame(coins)
-
+    st.error("CoinGecko rate limit hit (429). Try again in a few seconds.")
+    return []
 # =========================
 # FEATURE ENGINEERING
 # =========================
