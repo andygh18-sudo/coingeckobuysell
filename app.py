@@ -255,9 +255,10 @@ Reasons: {row['reasons']}
 # AUTO REFRESH
 # =========================
 
-auto = st.sidebar.checkbox("Auto Refresh (300s)")
+auto = st.sidebar.checkbox("Auto Refresh (slow-safe mode)")
 
 if auto:
-    st.sidebar.info("Live mode enabled")
-    st.cache_data.clear()
+    st.sidebar.info("Refreshing every 2 minutes")
+
+    time.sleep(120)
     st.rerun()
