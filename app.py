@@ -32,19 +32,13 @@ def fetch_top_200_coingecko():
         "price_change_percentage": "24h,7d,30d"
     }
 
-    headers = {
-        "User-Agent": "Mozilla/5.0"
-    }
+    headers = {"User-Agent": "Mozilla/5.0"}
 
-    # =========================
-    # RETRY LOGIC (ANTI 429)
-    # =========================
     for attempt in range(5):
 
         try:
             r = requests.get(url, params=params, headers=headers, timeout=10)
 
-            # Rate limit handling
             if r.status_code == 429:
                 wait = (2 ** attempt) + random.random()
                 time.sleep(wait)
@@ -58,7 +52,23 @@ def fetch_top_200_coingecko():
             if isinstance(data, dict):
                 return None
 
-            return data
+            # ✅ PRICE FIX APPLIED HERE (CRITICAL)
+            coins = []
+            for c in data:
+                coins.append({
+                    "name": c.get("name"),
+                    "symbol": c.get("symbol", "").upper(),
+                    "price": c.get("current_price"),   # 🔥 FIXED HERE
+                    "market_cap": c.get("market_cap"),
+                    "volume": c.get("total_volume"),
+                    "change_24h": c.get("price_change_percentage_24h"),
+                    "change_7d": c.get("price_change_percentage_7d_in_currency"),
+                    "change_30d": c.get("price_change_percentage_30d_in_currency"),
+                    "high_24h": c.get("high_24h"),
+                    "low_24h": c.get("low_24h")
+                })
+
+            return coins
 
         except Exception:
             wait = (2 ** attempt) + random.random()
@@ -67,7 +77,7 @@ def fetch_top_200_coingecko():
     return None
 
 # =========================
-# SESSION CACHE (CRITICAL FIX)
+# SESSION CACHE
 # =========================
 
 def get_data():
@@ -83,10 +93,10 @@ def get_data():
     return st.session_state.get("cached_data", [])
 
 # =========================
-# REFRESH CONTROL (NO API SPAM)
+# REFRESH CONTROL
 # =========================
 
-def should_refresh(interval=1800):  # 30 min safe default
+def should_refresh(interval=1800):
 
     if "last_update" not in st.session_state:
         return True
@@ -180,7 +190,7 @@ if should_refresh():
 raw_data = get_data()
 
 if not raw_data:
-    st.warning("Using cached data or waiting for API recovery (rate limit safe mode)")
+    st.warning("Using cached data or waiting for API recovery (rate-limit safe mode)")
     st.stop()
 
 df = pd.DataFrame(raw_data)
@@ -234,10 +244,10 @@ with col1:
     st.metric("Total Signals", len(df))
 
 with col2:
-    st.metric("Top Score", df["score"].max())
+    st.metric("Top Score", df["score"].max() if len(df) else 0)
 
 with col3:
-    st.metric("Avg Score", round(df["score"].mean(), 2))
+    st.metric("Avg Score", round(df["score"].mean(), 2) if len(df) else 0)
 
 st.divider()
 
@@ -284,4 +294,4 @@ Reasons: {row['reasons']}
 # STATUS
 # =========================
 
-st.sidebar.caption("API: CoinGecko | Mode: Production Stable | 429 Protected")
+st.sidebar.caption("API: CoinGecko | Production Stable | Price Fix Applied")
