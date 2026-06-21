@@ -20,7 +20,7 @@ import time
 import random
 
 @st.cache_data(ttl=1200)
-def fetch_top_500_coingecko(max_retries=5):
+def fetch_top_200_coingecko(max_retries=5):
     url = "https://api.coingecko.com/api/v3/coins/markets"
 
     params = {
@@ -197,7 +197,7 @@ def generate_signal(row):
 
 st.title("🚀 Crypto Trading System Pro (Signal Engine)")
 
-df = fetch_top_500_coingecko()
+df = fetch_top_200_coingecko()
 
 if df.empty:
     st.stop()
