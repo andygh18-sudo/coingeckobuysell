@@ -19,14 +19,14 @@ st.set_page_config(
 import time
 import random
 
-@st.cache_data(ttl=900)
-def fetch_top_200_coingecko(max_retries=5):
+@st.cache_data(ttl=1200)
+def fetch_top_500_coingecko(max_retries=5):
     url = "https://api.coingecko.com/api/v3/coins/markets"
 
     params = {
         "vs_currency": "usd",
         "order": "market_cap_desc",
-        "per_page": 500,
+        "per_page": 100,
         "page": 1,
         "sparkline": "false",
         "price_change_percentage": "24h,7d,30d"
