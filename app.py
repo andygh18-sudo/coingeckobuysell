@@ -26,7 +26,7 @@ def fetch_top_200_coingecko(max_retries=5):
     params = {
         "vs_currency": "usd",
         "order": "market_cap_desc",
-        "per_page": 200,
+        "per_page": 500,
         "page": 1,
         "sparkline": "false",
         "price_change_percentage": "24h,7d,30d"
