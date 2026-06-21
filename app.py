@@ -197,7 +197,7 @@ def generate_signal(row):
 
 st.title("🚀 Crypto Trading System Pro (Signal Engine)")
 
-df = fetch_top_200_coingecko()
+df = fetch_top_500_coingecko()
 
 if df.empty:
     st.stop()
